@@ -3,7 +3,7 @@ name: Deploy alpha to Development
 
 on:
   push:
-    branches: ["alpha"]
+    branches: ["alpha", "stable"]
 
   workflow_dispatch:
 
@@ -14,20 +14,34 @@ permissions:
   id-token: write
 
 jobs:
-  deploy-dev:
-    name: Deploy to Dev environment
+  deploy:
+    name: Deploy on push
     # IMPORTANT: the workflow must have write access to deployments, otherwise the action will fail.
     permissions:
       deployments: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: Check branch name
+          id: check-branch-name
+          run: |
+            if [ ${{ github.ref_name }} == "alpha" ]; then
+              echo 'DEPLOY_ENVIRONMENT=Development' >> $GITHUB_OUTPUT
+            elif [ ${{ github.ref_name }} == "stable" ]; then
+              echo 'DEPLOY_ENVIRONMENT=Staging' >> $GITHUB_OUTPUT
+            else
+              echo 'DEPLOY_ENVIRONMENT=none' >> $GITHUB_OUTPUT
+              exit 1
+            fi
+            echo "Deploying to $DEPLOY_ENVIRONMENT environment"
+
       - uses: chrnorm/deployment-action@v2
         name: Create GitHub deployment
-        id: deployment-dev
+        id: deployment
         with:
           token: '${{ github.token }}'
-          environment: development
+          environment: ${{steps.check-branch-name.outputs.DEPLOY_ENVIRONMENT}}
 
       - name: Update deployment status (success)
         if: ${{ success() }}
@@ -35,7 +49,7 @@ jobs:
         with:
           token: '${{ github.token }}'
           state: 'success'
-          deployment-id: ${{ steps.deployment-dev.outputs.deployment_id }}
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
 
       - name: Update deployment status (failure)
         if: ${{ failure() }}
@@ -43,7 +57,7 @@ jobs:
         with:
           token: '${{ github.token }}'
           state: 'failure'
-          deployment-id: ${{ steps.deployment-dev.outputs.deployment_id }}
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
 
       - name: Update deployment status (cancelled)
         if: ${{ cancelled() }}
@@ -51,4 +65,4 @@ jobs:
         with:
           token: '${{ github.token }}'
           state: 'cancelled'
-          deployment-id: ${{ steps.deployment-dev.outputs.deployment_id }}
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
