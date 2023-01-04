@@ -34,7 +34,7 @@ jobs:
             echo 'DEPLOY_ENVIRONMENT=none' >> $GITHUB_OUTPUT
             exit 1
           fi
-          echo "Deploying to $DEPLOY_ENVIRONMENT environment"
+          echo "Deploying to ${{steps.check-branch-name.outputs.DEPLOY_ENVIRONMENT}} environment"
 
       - uses: chrnorm/deployment-action@v2
         name: Create GitHub deployment
