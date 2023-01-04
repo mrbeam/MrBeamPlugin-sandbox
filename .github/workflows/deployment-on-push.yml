@@ -1,5 +1,5 @@
 # Deployment workflow to be used for Jira reporting
-name: Deploy alpha to Development
+name: Deploy on push to Developmnet or Staging
 
 on:
   push:
