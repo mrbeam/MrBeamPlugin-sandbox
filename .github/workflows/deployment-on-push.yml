@@ -28,13 +28,15 @@ jobs:
         run: |
           if [ ${{ github.ref_name }} == "alpha" ]; then
             echo 'DEPLOY_ENVIRONMENT=Development' >> $GITHUB_OUTPUT
+            echo " Deploying to Development environment"
           elif [ ${{ github.ref_name }} == "stable" ]; then
             echo 'DEPLOY_ENVIRONMENT=Staging' >> $GITHUB_OUTPUT
+            echo " Deploying to Staging environment"
           else
             echo 'DEPLOY_ENVIRONMENT=none' >> $GITHUB_OUTPUT
+            echo " Branch name: ${{ github.ref_name }} not supported, Exiting"
             exit 1
           fi
-          echo "Deploying to ${{steps.check-branch-name.outputs.DEPLOY_ENVIRONMENT}} environment"
 
       - uses: chrnorm/deployment-action@v2
         name: Create GitHub deployment
